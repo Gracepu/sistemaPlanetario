@@ -13,22 +13,24 @@ Planet saturnPlanet;
 Planet moonPlanet;
 
 PShape spaceship;
-float ang = HALF_PI;
-float rotateVel = 0.05;
-float x = 0,y=0;
+
 int spaceShipSz = 20;
+float ang = 0;
+float rotateVel = 0.05;
+float x = width/2,y=height/2,z=0;
+float moveX = 2 * sin(ang); 
+float moveY = -2 * cos(ang);
 boolean sh_movingForward = false;
 boolean sh_movingBackwards = false;
 boolean sh_turningRight = false;
 boolean sh_turningLeft = false;
+boolean firstPerson = false;
 
-String instructions = "Use the key arrows to move the spaceship around the scene";
+String instructions = "Use the key arrows to move the spaceship around the scene.\nPress spacebar for first person view";
 
 void setup() {
   size(700,700,P3D);
   noStroke();
-  noFill();
-  
   // Load textures
   space = loadImage("espacio.png");
   sun = loadImage("sol.jpg");
@@ -51,16 +53,22 @@ void setup() {
   earthPlanet.createMoon(moon);
   
   // Spaceship
-  spaceship = createShape(RECT,0,80,70,70);
-  spaceship.setTexture(spaceshipT);
+  stroke(0);
+  spaceship = createShape(BOX,40);
 }
 
 void draw() {
   
   background(space);
-  fill(255);
+  stroke(0);
   text(instructions,0,20);
-  noFill();
+  noStroke();
+  
+  if(firstPerson) {
+    spaceshipMove();
+    camera(x, y, z, x, y, ang, 0,1,0);
+  }
+  
   // Change the center
   translate(width/2, height/2, 0);
   rotateX(radians(-45));
@@ -74,27 +82,31 @@ void draw() {
   earthPlanet.move();
   
   // Spaceship
-  pushMatrix();
-  translate(width/2-5,height/2-5,-10);
-  translate(x, y);
-  rotate(ang);
-  shape(spaceship);
-  spaceshipMove();
-  popMatrix();
+  if(!firstPerson) {
+    camera(width/2.0, height/2.0, (height/2.0)/tan(PI*30.0/180.0), width/2.0, height/2.0, 0, 0, 1, 0);
+    pushMatrix();
+    spaceshipMove();
+    translate(x,y,z);
+    rotate(ang);
+    shape(spaceship);
+    popMatrix();
+  }
 }
-  
+
 void spaceshipMove() {
   //check movement of spaceShip
   float moveX = 2 * sin(ang); 
-  float moveY = -2 * cos(ang);
+  float moveZ = -2 * cos(ang);
 
   if (sh_movingForward) {
     x += moveX;
-    y += moveY;
+    z += moveZ;
+    y += 1;
   }
   if (sh_movingBackwards) {
     x -= moveX;
-    y -= moveY;
+    z -= moveZ;
+    y -= 1;
   }
   if (sh_turningRight) {
     ang += rotateVel;
@@ -104,9 +116,10 @@ void spaceshipMove() {
   }
 }
 
-// Check the keys
+// Check the keys pressed
 void keyPressed() {
-  if (keyCode==RIGHT)sh_turningRight = true;
+  if (keyCode==' ') firstPerson = !firstPerson;
+  if (keyCode==RIGHT) sh_turningRight = true;
   if (keyCode==LEFT) sh_turningLeft = true;
   if (keyCode==UP) sh_movingForward = true;
   if (keyCode==DOWN) sh_movingBackwards = true;
